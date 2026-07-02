@@ -1,0 +1,136 @@
+name: 编译 Hi3798MV100 Linux6.x LTS 内核（原生驱动终极版）
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+    
+      - name: 安装编译依赖
+        run: |
+          sudo apt update -y
+          sudo apt install -y gcc-arm-linux-gnueabihf make bison flex libssl-dev libelf-dev bc u-boot-tools device-tree-compiler
+
+      - name: 生成 Hi3798MV100 专用配置
+        run: |
+          pwd
+          ls -l
+          export ARCH=arm
+          export CROSS_COMPILE=arm-linux-gnueabihf-
+          
+          # 基于 ARMv7 通用配置
+          make multi_v7_defconfig
+          
+          # 启用 Hi3798MV100 平台原生支持（已合并到主线）
+          scripts/config --enable CONFIG_ARCH_HISI
+          scripts/config --enable CONFIG_ARCH_HI3798
+          
+          # 启用内核原生以太网驱动（hisi_femac）
+          scripts/config --enable CONFIG_HISI_FEMAC
+          scripts/config --enable CONFIG_PHYLIB
+          scripts/config --enable CONFIG_REALTEK_PHY
+          scripts/config --enable CONFIG_MII
+          
+          # 启用内核原生 MMC 存储驱动
+          scripts/config --enable CONFIG_MMC
+          scripts/config --enable CONFIG_MMC_DW
+          scripts/config --enable CONFIG_MMC_DW_HISI
+          
+          # 启用内核原生时钟驱动（已合并到主线）
+          scripts/config --enable CONFIG_CLK_HI3798
+          
+          # 启用串口控制台
+          scripts/config --enable CONFIG_SERIAL_AMBA_PL011
+          scripts/config --enable CONFIG_SERIAL_AMBA_PL011_CONSOLE
+          scripts/config --enable CONFIG_TTY
+          
+          # 启用早期打印（调试必备）
+          scripts/config --enable CONFIG_DEBUG_LL
+          scripts/config --enable CONFIG_DEBUG_HI3798MV100_UART0
+          scripts/config --enable CONFIG_EARLY_PRINTK
+          
+          # 启用 Docker 所有必需依赖
+          scripts/config --enable CONFIG_CGROUPS
+          scripts/config --enable CONFIG_CGROUP_FREEZER
+          scripts/config --enable CONFIG_CGROUP_PIDS
+          scripts/config --enable CONFIG_CGROUP_DEVICE
+          scripts/config --enable CONFIG_CGROUP_CPUACCT
+          scripts/config --enable CONFIG_MEMCG
+          scripts/config --enable CONFIG_NAMESPACES
+          scripts/config --enable CONFIG_OVERLAY_FS
+          scripts/config --enable CONFIG_POSIX_MQUEUE
+          scripts/config --enable CONFIG_SECCOMP
+          scripts/config --enable CONFIG_CAPABILITIES
+          scripts/config --enable CONFIG_BPF_SYSCALL
+          scripts/config --enable CONFIG_NETFILTER
+          scripts/config --enable CONFIG_IP_NF_FILTER
+          scripts/config --enable CONFIG_IP_NF_NAT
+          
+          # 启用模块支持
+          scripts/config --enable CONFIG_MODULES
+          scripts/config --enable CONFIG_MODULE_UNLOAD
+          scripts/config --enable CONFIG_MODVERSIONS
+          
+          # 启用设备树支持
+          scripts/config --enable CONFIG_OF
+          scripts/config --enable CONFIG_OF_FLATTREE
+          scripts/config --enable CONFIG_OF_ADDRESS
+          scripts/config --enable CONFIG_OF_IRQ
+          
+          # 彻底禁用所有不需要的功能
+          scripts/config --disable CONFIG_DRM
+          scripts/config --disable CONFIG_FB
+          scripts/config --disable CONFIG_VIDEO
+          scripts/config --disable CONFIG_SOUND
+          scripts/config --disable CONFIG_INPUT_KEYBOARD
+          scripts/config --disable CONFIG_INPUT_MOUSE
+          scripts/config --disable CONFIG_USB_SUPPORT
+          scripts/config --disable CONFIG_PCI
+          scripts/config --disable CONFIG_BLUETOOTH
+          scripts/config --disable CONFIG_WIRELESS
+          scripts/config --disable CONFIG_DEBUG_INFO
+          scripts/config --enable CONFIG_KERNEL_ZSTD
+          
+          # 自动补全所有配置（无交互式）
+          make olddefconfig
+
+      - name: 编译内核和设备树
+        run: |
+        
+          export ARCH=arm
+          export CROSS_COMPILE=arm-linux-gnueabihf-
+          make -j$(nproc) zImage dtbs
+
+      - name: 生成刷机专用 hi_kernel-mv100-32.bin（包含内核+DTB）
+        run: |
+          
+          # 找到Hi3798MV100的设备树文件
+          DTB_FILE=$(find arch/arm/boot/dts/hisilicon -name "*hi3798mv100*.dtb" | head -n 1)
+          
+          if [ -z "$DTB_FILE" ]; then
+            echo "错误：未找到Hi3798MV100设备树文件！"
+            exit 1
+          fi
+          
+          echo "使用设备树文件：$DTB_FILE"
+          
+          # 合并zImage和DTB
+          cat arch/arm/boot/zImage $DTB_FILE > zImage_with_dtb
+          
+          # 海思固定加载地址 0x02000000（这是关键修复！）
+          mkimage -A arm -O linux -T kernel -C none \
+            -a 0x02000000 -e 0x02000000 \
+            -n "Linux6.6.30-MV100-Native" \
+            -d zImage_with_dtb ../hi_kernel-mv100-32.bin
+          
+          echo "编译完成！内核文件信息："
+          ls -lh ../hi_kernel-mv100-32.bin
+
+      - name: 上传编译产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: hi_kernel-mv100-32-6.6.30-final
+          path: hi_kernel-mv100-32.bin
+          retention-days: 180
