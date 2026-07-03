@@ -99,19 +99,19 @@ jobs:
           # 自动补全所有配置（无交互式）
           make olddefconfig
 
-      - name: 编译内核和设备树
+      - name: 编译内核和设备树和模块
         run: |
         
           export ARCH=arm
           export CROSS_COMPILE=arm-linux-gnueabihf-
-          make -j$(nproc) zImage dtbs
+          make -j$(nproc) zImage dtbs modules
           
       - name: 提取内核驱动模块
         run: |
           
           mkdir -p ./kernel_modules_dist
-          make modules
           make modules_install INSTALL_MOD_PATH=./kernel_modules_dist
+          find ./kernel_modules_dist/lib/modules/ -type l -exec rm -f {} +
           tar -czf modules-6.6.30-mv100.tar.gz -C ./kernel_modules_dist
           
       - name: 生成刷机专用 hi_kernel-mv100-32.bin（包含内核+DTB）
