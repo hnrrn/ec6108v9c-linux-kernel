@@ -126,14 +126,25 @@ jobs:
           mkimage -A arm -O linux -T kernel -C none \
             -a 0x02000000 -e 0x02000000 \
             -n "Linux6.6.30-MV100-Native" \
-            -d zImage_with_dtb ../hi_kernel-mv100-32.bin
+            -d zImage_with_dtb hi_kernel-mv100-32.bin
           
           echo "编译完成！内核文件信息："
-          ls -lh ../hi_kernel-mv100-32.bin
+          ls -lh hi_kernel-mv100-32.bin
+          
+      - name: 提取内核驱动模块
+        run: |
+          echo "=== 提取内核驱动模块 ==="
+          mkdir -p ./kernel_modules_dist
+          make modules_install INSTALL_MOD_PATH=./kernel_modules_dist modules_install
+          tar -czf modules-6.6.30-mv100.tar.gz -C ./kernel_modules_dist lib/
 
       - name: 上传编译产物
         uses: actions/upload-artifact@v4
         with:
           name: hi_kernel-mv100-32-6.6.30-final
-          path: hi_kernel-mv100-32.bin
+          path: |
+            hi_kernel-mv100-32.bin
+            modules-6.6.30-mv100.tar.gz
+            .config
+          
           retention-days: 180
