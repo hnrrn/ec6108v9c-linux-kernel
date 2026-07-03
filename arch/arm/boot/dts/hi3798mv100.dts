@@ -15,9 +15,7 @@
 		i2c2 = "/soc/amba/i2c@0xf8b12000";
 		spi0 = "/soc/amba/spi@0xF8B1A000";
 	};
-	chosen {
-		bootargs = "mem=1G mmz=ddr,0,0,60M console=ttyAMA0,115200 root=/dev/mmcblk0p9 rootfstype=ext4 rootwait blkdevparts=mmcblk0:1M(boot),1M(bootargs),4M(baseparam),4M(pqparam),4M(logo),20M(kernel),64M(busybox),512M(backup),-(ubuntu)";
-	};
+
 	cpus {
 		#address-cells = <0x1>;
 		#size-cells = <0x0>;
