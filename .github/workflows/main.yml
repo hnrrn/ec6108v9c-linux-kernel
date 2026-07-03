@@ -138,13 +138,17 @@ jobs:
           echo "编译完成！内核文件信息："
           ls -lh 
           
+      - name:  打包相关物件
+        run: |
+            mkdir -p ./dist
+            cp hi_kernel-mv100-32.bin ./dist/
+            cp modules-*.tar.gz ./dist/
+            cp .config ./dist/kernel.config
+      
+      
       - name: 上传编译产物
         uses: actions/upload-artifact@v4
         with:
           name: hi_kernel-mv100-32-6.3.0-final
-          path: |
-            hi_kernel-mv100-32.bin
-            modules-6.3.0-mv100.tar.gz
-            .config
-          
+          path: dist/
           retention-days: 180
