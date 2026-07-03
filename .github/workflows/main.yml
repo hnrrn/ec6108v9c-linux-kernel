@@ -111,13 +111,13 @@ jobs:
           make modules_install INSTALL_MOD_PATH=./kernel_modules_dist
           find ./kernel_modules_dist/lib/modules/ -type l -exec rm -f {} +
           tar -czf modules-6.6.30-mv100.tar.gz -C ./kernel_modules_dist lib/
-          ls -l
+          ls -lh
           
       - name: 生成刷机专用 hi_kernel-mv100-32.bin（包含内核+DTB）
         run: |
           
           # 找到Hi3798MV100的设备树文件
-          DTB_FILE=$(find arch/arm/boot/dts/ -name "hi3798mv100.dtb" | head -n 1)
+          DTB_FILE=arch/arm/boot/dts/hi3798mv100.dtb
           
           if [ -z "$DTB_FILE" ]; then
             echo "错误：未找到Hi3798MV100设备树文件！"
@@ -136,7 +136,7 @@ jobs:
             -d zImage_with_dtb hi_kernel-mv100-32.bin
           
           echo "编译完成！内核文件信息："
-          ls -lh hi_kernel-mv100-32.bin
+          ls -lh 
           
       - name: 上传编译产物
         uses: actions/upload-artifact@v4
