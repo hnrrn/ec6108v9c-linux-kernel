@@ -110,7 +110,7 @@ jobs:
         run: |
           
           # 找到Hi3798MV100的设备树文件
-          DTB_FILE=$(find arch/arm/boot/dts/hisilicon -name "*hi3798mv100*.dtb" | head -n 1)
+          DTB_FILE=$(find arch/arm/boot/dts/ -name "*hi3798mv100*.dtb" | head -n 1)
           
           if [ -z "$DTB_FILE" ]; then
             echo "错误：未找到Hi3798MV100设备树文件！"
