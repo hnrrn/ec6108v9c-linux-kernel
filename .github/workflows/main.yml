@@ -99,7 +99,7 @@ jobs:
           # 自动补全所有配置（无交互式）
           make olddefconfig
 
-      - name: 编译内核和设备树和模块
+      - name: 编译内核-设备树-模块
         run: |
         
           export ARCH=arm
@@ -112,7 +112,7 @@ jobs:
           mkdir -p ./kernel_modules_dist
           make modules_install INSTALL_MOD_PATH=./kernel_modules_dist
           find ./kernel_modules_dist/lib/modules/ -type l -exec rm -f {} +
-          tar -czf modules-6.6.30-mv100.tar.gz -C ./kernel_modules_dist
+          tar -czf modules-6.6.30-mv100.tar.gz -C ./kernel_modules_dist lib/
           
       - name: 生成刷机专用 hi_kernel-mv100-32.bin（包含内核+DTB）
         run: |
@@ -133,7 +133,7 @@ jobs:
           # 海思固定加载地址 0x02000000（这是关键修复！）
           mkimage -A arm -O linux -T kernel -C none \
             -a 0x02000000 -e 0x02000000 \
-            -n "Linux6.6.30-MV100-Native" \
+            -n "Linux6.3.0-MV100-Native" \
             -d zImage_with_dtb hi_kernel-mv100-32.bin
           
           echo "编译完成！内核文件信息："
@@ -142,10 +142,10 @@ jobs:
       - name: 上传编译产物
         uses: actions/upload-artifact@v4
         with:
-          name: hi_kernel-mv100-32-6.6.30-final
+          name: hi_kernel-mv100-32-6.3.0-final
           path: |
             hi_kernel-mv100-32.bin
-            modules-6.6.30-mv100.tar.gz
+            modules-6.3.0-mv100.tar.gz
             .config
           
           retention-days: 180
