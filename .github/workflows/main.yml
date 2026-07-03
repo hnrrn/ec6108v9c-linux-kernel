@@ -21,7 +21,7 @@ jobs:
           export CROSS_COMPILE=arm-linux-gnueabihf-
           
           # 基于 ARMv7 通用配置
-          make multi_v7_defconfig
+          make ARCH=arm multi_v7_defconfig
           
           # 启用 Hi3798MV100 平台原生支持（已合并到主线）
           scripts/config --enable CONFIG_ARCH_HISI
