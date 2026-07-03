@@ -105,7 +105,15 @@ jobs:
           export ARCH=arm
           export CROSS_COMPILE=arm-linux-gnueabihf-
           make -j$(nproc) zImage dtbs
-
+          
+      - name: 提取内核驱动模块
+        run: |
+          
+          mkdir -p ./kernel_modules_dist
+          make modules
+          make modules_install INSTALL_MOD_PATH=./kernel_modules_dist
+          tar -czf modules-6.6.30-mv100.tar.gz -C ./kernel_modules_dist
+          
       - name: 生成刷机专用 hi_kernel-mv100-32.bin（包含内核+DTB）
         run: |
           
@@ -131,13 +139,6 @@ jobs:
           echo "编译完成！内核文件信息："
           ls -lh hi_kernel-mv100-32.bin
           
-      - name: 提取内核驱动模块
-        run: |
-          echo "=== 提取内核驱动模块 ==="
-          mkdir -p ./kernel_modules_dist
-          make modules_install INSTALL_MOD_PATH=./kernel_modules_dist modules_install
-          tar -czf modules-6.6.30-mv100.tar.gz -C ./kernel_modules_dist lib/
-
       - name: 上传编译产物
         uses: actions/upload-artifact@v4
         with:
