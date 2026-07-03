@@ -41,8 +41,6 @@ jobs:
           scripts/config --enable CONFIG_MMC_DW
           scripts/config --enable CONFIG_MMC_DW_HISI
           
-          # 启用内核原生时钟驱动（已合并到主线）
-          scripts/config --enable CONFIG_CLK_HI3798
           
           # 启用串口控制台
           scripts/config --enable CONFIG_SERIAL_AMBA_PL011
@@ -113,12 +111,13 @@ jobs:
           make modules_install INSTALL_MOD_PATH=./kernel_modules_dist
           find ./kernel_modules_dist/lib/modules/ -type l -exec rm -f {} +
           tar -czf modules-6.6.30-mv100.tar.gz -C ./kernel_modules_dist lib/
+          ls -l
           
       - name: 生成刷机专用 hi_kernel-mv100-32.bin（包含内核+DTB）
         run: |
           
           # 找到Hi3798MV100的设备树文件
-          DTB_FILE=$(find arch/arm/boot/dts/ -name "*hi3798mv100*.dtb" | head -n 1)
+          DTB_FILE=$(find arch/arm/boot/dts/ -name "hi3798mv100.dtb" | head -n 1)
           
           if [ -z "$DTB_FILE" ]; then
             echo "错误：未找到Hi3798MV100设备树文件！"
