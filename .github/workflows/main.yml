@@ -18,17 +18,12 @@ jobs:
 
       - name: 生成 Hi3798MV100 专用配置
         run: |
-          pwd
-          ls -l
           export ARCH=arm
           export CROSS_COMPILE=arm-linux-gnueabihf-
           
           # 基于 ARMv7 通用配置
-          make ARCH=arm multi_v7_defconfig
+          make ARCH=arm hi3798mv100_defconfig
           
-          # 启用 Hi3798MV100 平台原生支持（已合并到主线）
-          scripts/config --enable CONFIG_ARCH_HISI
-          scripts/config --enable CONFIG_ARCH_HI3798
           
           # 启用内核原生以太网驱动（hisi_femac）
           scripts/config --enable CONFIG_HISI_FEMAC
