@@ -12,6 +12,9 @@ jobs:
         run: |
           sudo apt update -y
           sudo apt install -y gcc-arm-linux-gnueabihf make bison flex libssl-dev libelf-dev bc u-boot-tools device-tree-compiler
+          
+      - name: Checkout source code
+        uses: actions/checkout@v4
 
       - name: 生成 Hi3798MV100 专用配置
         run: |
